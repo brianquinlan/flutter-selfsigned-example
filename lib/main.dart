@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -7,20 +8,15 @@ import 'package:flutter/services.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  ByteData data = await rootBundle.load('assets/cert/rootCA.p12');
+  ByteData data = await rootBundle.load('assets/cert/trusted_certs.pem');
   SecurityContext context = SecurityContext.defaultContext;
-  context.setTrustedCertificatesBytes(data.buffer.asUint8List(), password: "password");
+  context.setTrustedCertificatesBytes(data.buffer.asUint8List());
   var client = HttpClient(context: context);
 
-  final request = await client.getUrl(Uri.parse("https://185.156.23.215:8443/test"));
+  final request = await client.getUrl(Uri.parse("https://localhost:8081"));
   final response = await request.close();
 
-  if (response.statusCode == 200) {
-    print("Self signed cert accepted");
-  } else {
-    print("Self signed cert NOT accepted");
-
-  }
+  print('${response.statusCode}: ${utf8.decode(await response.first)}');
 
   runApp(const MyApp());
 }
@@ -48,12 +44,11 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-
-        title: Text(widget.title),
-      ),
-      body:Text(
-              'Example app',
-            ));
+        appBar: AppBar(
+          title: Text(widget.title),
+        ),
+        body: Text(
+          'Example app',
+        ));
   }
 }
